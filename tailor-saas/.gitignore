@@ -1,0 +1,36 @@
+# Generic ignores
+node_modules/
+vendor/
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env.*.local
+.DS_Store
+.vscode/
+.idea/
+*.log
+*.sqlite
+
+# Laravel specific ignores
+backend/.env
+backend/.env.backup
+backend/.env.production
+backend/bootstrap/cache/*
+!backend/bootstrap/cache/.gitignore
+backend/storage/*.key
+backend/storage/framework/cache/data/*
+backend/storage/framework/sessions/*
+backend/storage/framework/testing/*
+backend/storage/framework/views/*
+backend/storage/logs/*
+!backend/storage/logs/.gitignore
+backend/storage/app/public/*
+
+# Frontend specific ignores
+frontend/dist/
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
+frontend/.pnpm-debug.log*

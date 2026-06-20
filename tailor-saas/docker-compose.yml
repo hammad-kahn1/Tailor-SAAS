@@ -1,0 +1,125 @@
+services:
+
+  # ── Nginx ────────────────────────────────────────────────────
+  nginx:
+    image: nginx:alpine
+    container_name: tailor_nginx
+    ports:
+      - "8000:80"
+    volumes:
+      - ./backend:/var/www/html
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - backend
+    networks: [tailor_net]
+
+  # ── PHP-FPM Backend ──────────────────────────────────────────
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: tailor_backend
+    working_dir: /var/www/html
+    volumes:
+      - ./backend:/var/www/html
+    env_file:
+      - ./backend/.env
+    entrypoint: ["/bin/bash", "/var/www/html/docker/entrypoint.sh"]
+    depends_on:
+      - mysql
+      - redis
+    networks: [tailor_net]
+
+  # ── Queue Worker ─────────────────────────────────────────────
+  queue:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: tailor_queue
+    working_dir: /var/www/html
+    volumes:
+      - ./backend:/var/www/html
+    env_file:
+      - ./backend/.env
+    command: php artisan queue:work --sleep=3 --tries=3 --max-time=3600
+    depends_on:
+      - mysql
+      - redis
+    networks: [tailor_net]
+    restart: unless-stopped
+
+  # ── Scheduler ────────────────────────────────────────────────
+  scheduler:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: tailor_scheduler
+    working_dir: /var/www/html
+    volumes:
+      - ./backend:/var/www/html
+    env_file:
+      - ./backend/.env
+    command: >
+      sh -c "while true; do php artisan schedule:run --verbose --no-interaction; sleep 60; done"
+    depends_on:
+      - mysql
+      - redis
+    networks: [tailor_net]
+    restart: unless-stopped
+
+  # ── MySQL ────────────────────────────────────────────────────
+  mysql:
+    image: mysql:8.0
+    container_name: tailor_mysql
+    environment:
+      MYSQL_DATABASE: tailor_saas
+      MYSQL_USER: tailor
+      MYSQL_PASSWORD: secret
+      MYSQL_ROOT_PASSWORD: root_secret
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks: [tailor_net]
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+
+  # ── Redis ────────────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: tailor_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks: [tailor_net]
+
+  # ── MailHog (dev email) ──────────────────────────────────────
+  mailhog:
+    image: mailhog/mailhog
+    container_name: tailor_mailhog
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+    networks: [tailor_net]
+
+  # ── Frontend (Vite Dev Server) ───────────────────────────────
+  frontend:
+    image: node:20-alpine
+    container_name: tailor_frontend
+    working_dir: /app
+    volumes:
+      - ./frontend:/app
+    ports:
+      - "5173:5173"
+    command: sh -c "npm install && npm run dev -- --host 0.0.0.0"
+    environment:
+      - VITE_API_BASE_URL=http://localhost:8000/api/v1
+    networks: [tailor_net]
+
+networks:
+  tailor_net:
+    driver: bridge
+
+volumes:
+  mysql_data:
+  redis_data:
