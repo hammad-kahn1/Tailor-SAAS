@@ -1,0 +1,10 @@
+{
+  "name": "tailor-saas-root",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "cd tailor-saas/frontend && npm run dev",
+    "build": "cd tailor-saas/frontend && npm install && npm run build && cp -r dist ../../dist",
+    "preview": "cd tailor-saas/frontend && npm run preview"
+  }
+}
