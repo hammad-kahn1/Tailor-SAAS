@@ -44,7 +44,7 @@ class UserController extends Controller
 
     public function update(Request $request, int $user): JsonResponse
     {
-        $request->validate([
+        $validated = $request->validate([
             'role'      => 'sometimes|in:manager,tailor,receptionist',
             'is_active' => 'sometimes|boolean',
             'name'      => 'sometimes|string|max:255',
@@ -52,7 +52,7 @@ class UserController extends Controller
         ]);
 
         $found = User::where('tenant_id', $request->user()->tenant_id)->findOrFail($user);
-        $found->update($request->validated());
+        $found->update($validated);
         return response()->json(['message' => 'Staff member updated.', 'data' => $found]);
     }
 

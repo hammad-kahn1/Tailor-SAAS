@@ -30,7 +30,7 @@ class TenantController extends Controller
     // ── Super Admin: update any tenant (PUT /admin/tenants/{tenant}) ────
     public function update(Request $request, int $tenant): JsonResponse
     {
-        $request->validate([
+        $validated = $request->validate([
             'name'                => 'sometimes|string|max:255',
             'phone'               => 'nullable|string',
             'address'             => 'nullable|string',
@@ -40,7 +40,7 @@ class TenantController extends Controller
             'settings'            => 'nullable|array',
         ]);
         $record = Tenant::withoutTenantScope()->findOrFail($tenant);
-        $record->update($request->validated());
+        $record->update($validated);
         return response()->json(['message' => 'Tenant updated.', 'data' => $record]);
     }
 
@@ -69,14 +69,14 @@ class TenantController extends Controller
     // ── Shop Owner: update own profile (PUT /shop/profile) ─────────────
     public function updateProfile(Request $request): JsonResponse
     {
-        $request->validate([
+        $validated = $request->validate([
             'name'     => 'sometimes|string|max:255',
             'phone'    => 'nullable|string',
             'address'  => 'nullable|string',
             'settings' => 'nullable|array',
         ]);
         $tenant = $request->user()->tenant;
-        $tenant->update($request->validated());
+        $tenant->update($validated);
         return response()->json(['message' => 'Shop profile updated.', 'data' => $tenant]);
     }
 }

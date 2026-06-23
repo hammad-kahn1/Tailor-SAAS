@@ -33,14 +33,14 @@ class PaymentController extends Controller
      */
     public function store(Request $request, Order $order): JsonResponse
     {
-        $request->validate([
+        $validated = $request->validate([
             'amount' => 'required|numeric|min:0.01',
             'type'   => 'required|in:advance,partial,final,refund',
             'method' => 'required|in:cash,card,bank_transfer,mobile_wallet',
             'notes'  => 'nullable|string',
         ]);
 
-        $payment = $this->service->recordPayment($order, $request->validated());
+        $payment = $this->service->recordPayment($order, $validated);
         return response()->json(['message' => 'Payment recorded.', 'data' => $payment], 201);
     }
 }
